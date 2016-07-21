@@ -1,3 +1,4 @@
+
 // RequestAnimFrame: a browser API for getting smooth animations
 window.requestAnimFrame = (function(){
 	return  window.requestAnimationFrame   ||
@@ -60,8 +61,8 @@ ball = {
     y: 50,
     r: 9,
     c: "#ffffff",
-    vx: 4,
-    vy: 8,
+    vx: 10,
+    vy: 4,
     
     draw : function() {
         ctx.beginPath();
@@ -91,34 +92,57 @@ startBtn = {
         ctx.fillStyle = "#fff";
         ctx.fillText("Start", W / 2, H / 2);
     }
+
 }
 startBtn.draw();
+
+// Game Instructions
+var instruction = {}; //Start button object
+instruction = {
+    w: 200,
+    h: 100,
+    x: W / 2 - 100,
+    y: H / 2 + 50,
+    
+    draw: function() {
+        
+        
+        ctx.font = "18px Arial, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#fff";
+        ctx.fillText("Instructions: Use the mouse to control paddles, and hit ball back and forth.", W / 2, H / 2 + 60);
+    }
+
+}
+instruction.draw();
+
 
 // Step 05 ..tat.. Place score and points on canvas
 var points = 0; // Game Points
 function paintScore() {
     ctx.fillStyle = '#FFF';
     ctx.font = "18px Arial, sans-serif";
-    ctx.textAlign = 'left';
+    ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText('Score: ' + points, 20, 20);
+    ctx.fillText('Score: ' + points, W / 2, 20);
 }
 paintScore();
 
 
 // Step 06 ..tat.. Place paddles (top and bottom) on canvas
-
+var paddleHeight = 150;
 function paddlePosition(TB) {
-    this.w = 150;
-    this.h = 5;
+    this.w = 5;
+    this.h = paddleHeight;
     
-    this.x = W / 2 - this.w / 2;
+    this.x = H / 2 - this.h / 2;
     
     if (TB == "top") {
-        this.y = 0;
+        this.x = 0;
     }
     else {
-        this.y = H - this.h;
+        this.x = W - this.w;
     }
     // this.y = (TB == "top") ? 0 : H - this.h;         <--- Abreviated Version
 }
@@ -130,13 +154,18 @@ paddlesArray.push(new paddlePosition("bottom"));
 /*console.log("top paddle y is: " + paddlesArray[0].y );
 console.log("top paddle y is: " + paddlesArray[1].y );*/
 
+
 function paintPaddles() {
     console.log ("paddle");
     for (var lp = 0; lp < paddlesArray.length; lp++) {
         p = paddlesArray[lp];
-        
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(p.x, p.y, p.w, p.h);
+        if (lp == 0) {
+            ctx.fillStyle = "#ffa500";
+        }
+        else {
+            ctx.fillStyle = "#0000ff";
+        }
+        ctx.fillRect(p.x, p.y, p.w, paddleHeight);
     }
 }
 paintPaddles();
@@ -152,7 +181,7 @@ function btnClick(evt) {
     
     // User clicked on RESTART button
     if (mx >= startBtn.x && mx <= startBtn.x + startBtn.w) {
-        if (my >= startBtn.y && my <= startBtn.y +startBtn.h) {
+        if (my >= startBtn.y && my <= startBtn.y + startBtn.h) {
             // console.log ("Start button clicked");
             // Delete the start button
             startBtn = {};
@@ -170,8 +199,9 @@ function btnClick(evt) {
                 points = 0;
                 ball.x = 20;
                 ball.y = 20;
-                ball.vx = 4;
-                ball.vy = 8;
+                ball.vx = 10;
+                ball.vy = 4;
+                p.h = 150;
                 
                 flagGameOver = 0;
 
@@ -203,8 +233,9 @@ function update() {
     // Move the paddles, track the mouse
     for (var lp = 0; lp < paddlesArray.length; lp++) {
         p = paddlesArray[lp];
-        p.x = mouseObj.x - p.w / 2;
+        p.y = mouseObj.y - p.h / 2;
     }
+    paddlePosition();
     // Move the ball
     ball.x += ball.vx;
     ball.y += ball.vy;
@@ -224,22 +255,22 @@ function check4collision() {
     }
     else {
         // Ball went off top or bottom of screen
-        if (ball.y + ball.r > H) {
+        if (ball.x + ball.r > W) {
             // Game over
             gameOver();
         }
-        else if (ball.y < 0) {
+        else if (ball.x < 0) {
             // Game over
             gameOver();
         }
         // Ball hits the side of the screen
-        if (ball.x + ball.r > W) {
-            ball.vx = -ball.vx;
-            ball.x = W - ball.r;
+        if (ball.y + ball.r > H) {
+            ball.vy = -ball.vy;
+            ball.y = H - ball.r;
         }
-        else if (ball.x - ball.r < 0) {
-            ball.vx = -ball.vx;
-            ball.x = ball.r;
+        else if (ball.y - ball.r < 0) {
+            ball.vy = -ball.vy;
+            ball.y = ball.r;
         }
     }
     // SPARKLES
@@ -260,8 +291,8 @@ function createParticles(x, y, d) {
     
     this.radius = 2;
     
-    this.vx = -1.5 + Math.random() * 3;
-    this.vy =   d  * Math.random() * 1.5;
+    this.vy = -1.5 + Math.random() * 3;
+    this.vx =   d  * Math.random() * 1.5;
 }
 
 function emitParticles() {
@@ -269,9 +300,12 @@ function emitParticles() {
         par = particles[j];
         
         ctx.beginPath();
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = '#'+(Math.random().toString(16) + '000000').slice(2, 8);
+        // Random HEX creation inspired by Paul Irish's code snippet:
+        // http://www.paulirish.com/2009/random-hex-color-code-snippets/
         if (par.radius > 0) {
             ctx.arc(par.x, par.y, par.radius, 0, Math.PI*2, false);
+            
         }
         ctx.fill();
         
@@ -285,12 +319,13 @@ function emitParticles() {
 
 var paddleHit; // Which paddle was hit 0=top, 1=bottom
 function collides(b, p) {
-    if (b.x + b.r >= p.x && b.x - b.r <= p.x + p.w) {
-        if (b.y >= (p.y - p.h) && p.y > 0) {
+    if (b.y + b.r >= p.y && b.y - b.r <= p.y + p.h) {
+        if (b.x >= (p.x - p.w) && p.x > 0) {
             paddleHit = 0;
             return true;
+            
         }
-        else if (b.y <= p.h && p.y === 0) {
+        else if (b.x <= p.w && p.x === 0) {
             paddleHit = 1;
             return true;
         }
@@ -308,22 +343,23 @@ function collideAction (b, p) {
         collisionSnd.play();
     }
     // Reverse ball y velocity
-    ball.vy = -ball.vy;
+    ball.vx = -ball.vx;
 
     
     // Determine if ball hits top or bottom paddle, for particle creation.
     if (paddleHit == 0) {
         // Ball hit top paddle
-        ball.y = p.y - p.h;
+        ball.x = p.x - p.w;
         
-        particlePos.y = ball.y + ball.r;
+ 
+        particlePos.x = ball.x + ball.r;
         particleDir   = -1;
         
     } else if (paddleHit == 1) {
         // Ball hit bottom paddle
-        ball.y = p.y + ball.r;
+        ball.x = p.x + ball.r;
         
-        particlePos.y = ball.y - ball.r;
+        particlePos.x = ball.x - ball.r;
         particleDir   = 1;
         
     }
@@ -334,7 +370,7 @@ function collideAction (b, p) {
     increaseSpd();
     
     // SPARKLES
-    particlePos.x = ball.x;
+    particlePos.y = ball.y;
     
     flagCollision = 1;
 }
@@ -354,6 +390,14 @@ function increaseSpd() {
             ball.vx += (ball.vx < 0) ? -1 : 1; //If the ball is going left increase it by one left, if it is going right then it increases right.
             ball.vy += (ball.vy < 0) ? -2 : 2;
         }
+        if (paddleHeight > 20) {
+            paddleHeight = paddleHeight - 5;
+            /*
+            This would ideally be done without a global variable using the p.h variable directly and having it update within the paint canvas
+            function, however I could only apply it to one of the paddles (blue one) to successfully shrink it.
+            */
+        }
+        console.log("Height: " + p.h)
     }
 }
 
@@ -399,10 +443,6 @@ restartBtn = {
         ctx.fillText("Replay?", W / 2, H / 2 - 25);
     }
 }
-
-
-
-
 
 
 
