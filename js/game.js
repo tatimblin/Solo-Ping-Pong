@@ -359,7 +359,7 @@ function collideAction (b, p) {
         // Ball hit bottom paddle
         ball.x = p.x + ball.r;
         
-        particlePos.x = ball.x - ball.r;
+        particlePos.x = ball.x - ball.r + 5;
         particleDir   = 1;
         
     }
